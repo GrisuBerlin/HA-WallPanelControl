@@ -1,10 +1,10 @@
 {
-    "domain": "wallpanel_control",
-    "name": "WallPanel Control",
+    "domain": "wallpanel_control Rico",
+    "name": "WallPanel Control Rico",
     "documentation": "https://github.com/AlessandroTischer/HA-WallPanelControl",
     "dependencies": [],
-    "codeowners": ["@AlessandroTischer"],
+    "codeowners": ["@AlessandroTischer - mod by Rico"],
     "requirements": [],
     "config_flow": true,
-    "version": "1.0.1"
+    "version": "1.0.2"
 }  
