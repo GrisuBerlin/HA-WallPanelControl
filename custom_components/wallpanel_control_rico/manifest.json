@@ -1,5 +1,5 @@
 {
-    "domain": "wallpanel_control Rico",
+    "domain": "wallpanel_control_rico",
     "name": "WallPanel Control Rico",
     "documentation": "https://github.com/AlessandroTischer/HA-WallPanelControl",
     "dependencies": [],
