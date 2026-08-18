@@ -1,5 +1,5 @@
 {
-  "name": "WallPanel Control",
-  "domains": ["wallpanel_control"],
+  "name": "WallPanel Control Rico",
+  "domains": ["wallpanel_control_rico"],
   "render_readme": true
 }
