@@ -9,7 +9,7 @@ DOMAIN = "wallpanel_control_rico"
 _LOGGER = logging.getLogger(__name__)
 
 # Define the platforms supported by this integration
-PLATFORMS: list[str] = ["light", "switch"]
+PLATFORMS: list[str] = ["light"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up wallpanel_control from a config entry."""

@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -52,11 +53,7 @@ async def async_setup_entry(
 class WallPanelLight(LightEntity):
     """Representation of the WallPanel LED light."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        host: str,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, host: str) -> None:
         self.hass = hass
         self._host = host
         self._state = False
@@ -70,7 +67,7 @@ class WallPanelLight(LightEntity):
 
     @property
     def name(self) -> str:
-        return "Tablet Flur OG LED"
+        return "LED"
 
     @property
     def is_on(self) -> bool:
@@ -104,18 +101,22 @@ class WallPanelLight(LightEntity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self._host)},
-            "name": "Tablet Flur OG",
+            "name": "WallPanel 32",
             "manufacturer": "WallPanel Manufacturer",
             "model": "WallPanel WS2812",
             "sw_version": "1.0.2",
         }
+
+    @property
+    def supported_features(self) -> LightEntityFeature:
+        return LightEntityFeature.EFFECT
 
     def _perform_request(
         self,
         path: str,
         params: dict[str, object],
     ) -> bool:
-        """Perform blocking HTTP request in an executor."""
+        """Perform a blocking HTTP request."""
         url = f"http://{self._host}:8080{path}"
 
         try:
@@ -146,7 +147,7 @@ class WallPanelLight(LightEntity):
         path: str,
         params: dict[str, object],
     ) -> bool:
-        """Run synchronous requests outside the HA event loop."""
+        """Run requests outside the Home Assistant event loop."""
         return await self.hass.async_add_executor_job(
             partial(
                 self._perform_request,
@@ -174,28 +175,21 @@ class WallPanelLight(LightEntity):
             {"color": self._color_hex()},
         )
 
-    async def _async_send_effect(
-        self,
-        effect: str,
-    ) -> bool:
+    async def _async_send_effect(self, effect: str) -> bool:
         params: dict[str, object] = {
             "effect": effect,
+            "cycles": 1,
             "color": self._color_hex(),
-            "cycles": 3,
         }
 
         if effect == EFFECT_BREATHING:
-            params.update({
-                "speed": 2,
-            })
-
+            params.update({"speed": 2})
         elif effect == EFFECT_RAINBOW:
             params = {
                 "effect": effect,
                 "speedMs": 50,
                 "cycles": 2,
             }
-
         elif effect == EFFECT_CHASING:
             params.update({
                 "background": "141414",
@@ -203,7 +197,6 @@ class WallPanelLight(LightEntity):
                 "speedMs": 30,
                 "cycles": 1,
             })
-
         elif effect == EFFECT_WIPE:
             params.update({
                 "background": "000000",
@@ -211,7 +204,6 @@ class WallPanelLight(LightEntity):
                 "speedMs": 50,
                 "cycles": 1,
             })
-
         elif effect == EFFECT_BOUNCE:
             params.update({
                 "background": "000010",
@@ -219,24 +211,18 @@ class WallPanelLight(LightEntity):
                 "speedMs": 30,
                 "cycles": 2,
             })
-
         elif effect == EFFECT_ALERT:
             params.update({
                 "freqHz": 2,
                 "flashes": 5,
             })
-
         elif effect == EFFECT_NOTIFICATION:
             params.update({
                 "maxBrightness": 50,
                 "cycles": 3,
             })
-
         else:
-            _LOGGER.error(
-                "Unsupported effect: %s",
-                effect,
-            )
+            _LOGGER.error("Unsupported effect: %s", effect)
             return False
 
         return await self._async_request(
@@ -245,7 +231,7 @@ class WallPanelLight(LightEntity):
         )
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn LED on with color, brightness, or effect."""
+        """Turn the LED on with color, brightness, or effect."""
         rgb_color = kwargs.get(ATTR_RGB_COLOR)
 
         if rgb_color is not None:
@@ -266,17 +252,19 @@ class WallPanelLight(LightEntity):
 
         if effect and effect != EFFECT_STATIC:
             success = await self._async_send_effect(effect)
-            self._effect = effect
+            if success:
+                self._effect = effect
         else:
             success = await self._async_send_static()
-            self._effect = EFFECT_STATIC
+            if success:
+                self._effect = EFFECT_STATIC
 
         if success:
             self._state = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn LED off."""
+        """Turn the LED off."""
         success = await self._async_request(
             "/setLED",
             {"color": "0"},
